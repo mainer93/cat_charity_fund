@@ -42,8 +42,6 @@ class CRUDBase:
             obj_in_data['user_id'] = user.id
         db_obj = self.model(**obj_in_data)
         session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
         return db_obj
 
     async def update(
@@ -59,8 +57,6 @@ class CRUDBase:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
         return db_obj
 
     async def remove(
@@ -69,5 +65,30 @@ class CRUDBase:
             session: AsyncSession,
     ):
         await session.delete(db_obj)
-        await session.commit()
         return db_obj
+
+    async def remove(
+            self,
+            db_obj,
+            session: AsyncSession,
+    ):
+        await session.delete(db_obj)
+        return db_obj
+
+    async def get_project_by_name(
+            self,
+            name: str,
+            session: AsyncSession,
+    ) -> Optional[object]:
+        result = await session.execute(
+            select(self.model).where(self.model.name == name)
+        )
+        return result.scalars().first()
+
+    async def get_by_user(
+        self, session: AsyncSession, user: User
+    ):
+        records = await session.execute(
+            select(self.model).where(self.model.user_id == user.id)
+        )
+        return records.scalars().all()

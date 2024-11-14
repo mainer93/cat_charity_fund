@@ -3,20 +3,30 @@ from typing import Optional
 
 from pydantic import BaseModel, Extra, Field, PositiveInt, validator
 
+from app.models.constants import (CHARITY_PROJECT_DESCRIPTION_MIN_LENGTH,
+                                  CHARITY_PROJECT_NAME_MAX_LENGTH,
+                                  CHARITY_PROJECT_NAME_MIN_LENGTH,
+                                  DEFAULT_INVESTED_AMOUNT)
 
-class CharityProjectCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    description: str = Field(..., min_length=1)
+
+class CharityProjectBase(BaseModel):
+    name: Optional[str] = Field(None,
+                                min_length=CHARITY_PROJECT_NAME_MIN_LENGTH,
+                                max_length=CHARITY_PROJECT_NAME_MAX_LENGTH)
+    description: Optional[str] = Field(
+        None,
+        min_length=CHARITY_PROJECT_DESCRIPTION_MIN_LENGTH)
+    full_amount: Optional[PositiveInt]
+
+
+class CharityProjectCreate(CharityProjectBase):
+    name: str = Field(min_length=CHARITY_PROJECT_NAME_MIN_LENGTH,
+                      max_length=CHARITY_PROJECT_NAME_MAX_LENGTH)
+    description: str = Field(min_length=CHARITY_PROJECT_DESCRIPTION_MIN_LENGTH)
     full_amount: PositiveInt
 
-    class Config:
-        extra = Extra.forbid
 
-
-class CharityProjectUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, min_length=1)
-    full_amount: Optional[PositiveInt]
+class CharityProjectUpdate(CharityProjectBase):
 
     @validator('name')
     def name_cannot_be_null(cls, value):
@@ -30,7 +40,7 @@ class CharityProjectUpdate(BaseModel):
 
 class CharityProjectDB(CharityProjectCreate):
     id: int
-    invested_amount: int = 0
+    invested_amount: int = DEFAULT_INVESTED_AMOUNT
     fully_invested: bool = False
     create_date: datetime
     close_date: Optional[datetime]

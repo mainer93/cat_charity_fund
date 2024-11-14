@@ -26,7 +26,7 @@ async def check_project_exists(
     project = await charity_project_crud.get(project_id, session)
     if project is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail='Проект не найден!'
         )
     return project
@@ -38,7 +38,7 @@ async def check_required_amount_not_less_than_invested(
 ) -> None:
     if new_full_amount < project.invested_amount:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
                 f'Требуемая сумма ({new_full_amount}) не может быть меньше '
                 f'внесённой суммы ({project.invested_amount})!'
@@ -51,7 +51,7 @@ async def check_project_not_invested(
 ) -> None:
     if project.invested_amount > 0:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Нельзя удалить проект, в который уже внесены средства!'
         )
 
@@ -61,6 +61,6 @@ async def check_project_not_closed(
 ) -> None:
     if project.fully_invested:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Нельзя удалить закрытый проект!'
         )

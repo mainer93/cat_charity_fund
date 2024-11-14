@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Extra, PositiveInt
 
+from app.models.constants import DEFAULT_INVESTED_AMOUNT
+
 
 class DonationCreate(BaseModel):
     full_amount: PositiveInt
@@ -32,6 +34,6 @@ class DonationMyDB(DonationCreate):
 
 class DonationDB(DonationMyDB):
     user_id: Optional[int]
-    invested_amount: int = 0
+    invested_amount: int = DEFAULT_INVESTED_AMOUNT
     fully_invested: bool = False
     close_date: datetime = None

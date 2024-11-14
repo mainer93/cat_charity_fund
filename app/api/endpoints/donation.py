@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.core.db import get_async_session
 from app.core.user import current_superuser, current_user
 from app.crud.donation import donation_crud
 from app.models import User
+from app.models.charity_project import CharityProject
 from app.schemas.donation import (DonationCreate,
                                   DonationCreateResponse,
                                   DonationDB)
@@ -25,7 +27,14 @@ async def create_donation(
         user: User = Depends(current_user),
 ):
     new_donation = await donation_crud.create(donation, session, user)
-    await invest_donations(session)
+    projects_query = (
+        select(CharityProject)
+        .filter_by(fully_invested=False)
+        .order_by(CharityProject.create_date)
+    )
+    projects_result = await session.execute(projects_query)
+    sources = projects_result.scalars().all()
+    invest_donations(new_donation, sources)
     await session.commit()
     await session.refresh(new_donation)
     return new_donation
@@ -34,7 +43,6 @@ async def create_donation(
 @router.get(
     '/',
     response_model=list[DonationDB],
-    response_model_exclude_none=True,
     dependencies=[Depends(current_superuser)],
 )
 async def get_all_donations(
